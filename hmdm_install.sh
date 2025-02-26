@@ -9,17 +9,17 @@ DEFAULT_SQL_HOST=localhost
 DEFAULT_SQL_PORT=5432
 DEFAULT_SQL_BASE=hmdm
 DEFAULT_SQL_USER=hmdm
-DEFAULT_SQL_PASS=
+DEFAULT_SQL_PASS=topsecret
 DEFAULT_LOCATION="/opt/hmdm"
 DEFAULT_SCRIPT_LOCATION="/opt/hmdm"
 TOMCAT_HOME=$(ls -d /var/lib/tomcat* | tail -n1)
 TOMCAT_SERVICE=$(echo $TOMCAT_HOME | awk '{n=split($1,A,"/"); print A[n]}')
 TOMCAT_ENGINE="Catalina"
 TOMCAT_HOST="localhost"
-DEFAULT_PROTOCOL=https
-DEFAULT_BASE_DOMAIN=
+DEFAULT_PROTOCOL=http
+DEFAULT_BASE_DOMAIN=localhost
 DEFAULT_BASE_PATH="ROOT"
-DEFAULT_PORT=""
+DEFAULT_PORT=8080
 TEMP_DIRECTORY="/tmp"
 TEMP_SQL_FILE="$TEMP_DIRECTORY/hmdm_init.sql"
 TOMCAT_USER=$(ls -ld $TOMCAT_HOME/webapps | awk '{print $3}')
@@ -155,7 +155,7 @@ fi
 
 CLIENT_APK="hmdm-$CLIENT_VERSION-$CLIENT_VARIANT.apk"
 
-read -e -p "Please choose the installation language (en/ru) [en]: " -i "en" LANGUAGE
+# read -e -p "Please choose the installation language (en/ru) [en]: " -i "en" LANGUAGE
 echo
 
 echo "PostgreSQL database setup"
@@ -172,11 +172,16 @@ echo "\q"
 echo "exit"
 echo "-------------------------"
 
-read -e -p "PostgreSQL host [$DEFAULT_SQL_HOST]: " -i "$DEFAULT_SQL_HOST" SQL_HOST
-read -e -p "PostgreSQL port [$DEFAULT_SQL_PORT]: " -i "$DEFAULT_SQL_PORT" SQL_PORT
-read -e -p "PostgreSQL database [$DEFAULT_SQL_BASE]: " -i "$DEFAULT_SQL_BASE" SQL_BASE
-read -e -p "PostgreSQL user [$DEFAULT_SQL_USER]: " -i "$DEFAULT_SQL_USER" SQL_USER
-read -e -p "PostgreSQL password: " -i "$DEFAULT_SQL_PASS" SQL_PASS
+#read -e -p "PostgreSQL host [$DEFAULT_SQL_HOST]: " -i "$DEFAULT_SQL_HOST" SQL_HOST
+#read -e -p "PostgreSQL port [$DEFAULT_SQL_PORT]: " -i "$DEFAULT_SQL_PORT" SQL_PORT
+#read -e -p "PostgreSQL database [$DEFAULT_SQL_BASE]: " -i "$DEFAULT_SQL_BASE" SQL_BASE
+#read -e -p "PostgreSQL user [$DEFAULT_SQL_USER]: " -i "$DEFAULT_SQL_USER" SQL_USER
+#read -e -p "PostgreSQL password: " -i "$DEFAULT_SQL_PASS" SQL_PASS
+SQL_HOST=$DEFAULT_SQL_HOST
+SQL_PORT=$DEFAULT_SQL_PORT
+SQL_BASE=$DEFAULT_SQL_BASE
+SQL_USER=$DEFAULT_SQL_USER
+SQL_PASS=$DEFAULT_SQL_PASS
 
 PSQL_CONNSTRING="postgresql://$SQL_USER:$SQL_PASS@$SQL_HOST:$SQL_PORT/$SQL_BASE"
 
@@ -193,7 +198,7 @@ if [ ! -z "$TABLE_EXISTS" ]; then
     echo "The database is already setup."
     echo "To re-deploy Headwind MDM, the database needs to be cleared."
     echo "Clear the database? ALL DATA WILL BE LOST!"
-    read -e -p "Type \"erase\" to clear the database and continue setup: " RESPONSE
+    read -e -p "Type \"erase\" to clear the database and continue setup: " -i "erase" RESPONSE
     if [ "$RESPONSE" == "erase" ]; then
         echo "DROP TABLE IF EXISTS applicationfilestocopytemp, applications, applicationversions, applicationversionstemp, configurationapplicationparameters, configurationapplications, configurationapplicationsettings, configurationfiles, configurations, customers, databasechangelog, databasechangeloglock, deviceapplicationsettings, devicegroups, devices, devicestatuses, groups, icons, pendingpushes, pendingsignup, permissions, plugin_apuppet_data, plugin_apuppet_settings, plugin_audit_log, plugin_deviceinfo_deviceparams, plugin_deviceinfo_deviceparams_device, plugin_deviceinfo_deviceparams_gps, plugin_deviceinfo_deviceparams_mobile, plugin_deviceinfo_deviceparams_mobile2, plugin_deviceinfo_deviceparams_wifi, plugin_deviceinfo_settings, plugin_devicelocations_history, plugin_devicelocations_latest, plugin_devicelocations_settings, plugin_devicelog_log, plugin_devicelog_setting_rule_devices, plugin_devicelog_settings, plugin_devicelog_settings_rules, plugin_devicereset_status, plugin_knox_rules, plugin_messaging_messages, plugin_openvpn_defaults, plugin_photo_photo, plugin_photo_photo_places, plugin_photo_places, plugin_photo_settings, plugin_push_messages, plugin_push_schedule, plugins, pluginsdisabled, pushmessages, settings, trialkey, uploadedfiles, usagestats, userconfigurationaccess, userdevicegroupsaccess, userhints, userhinttypes, userrolepermissions, userroles, userrolesettings, users CASCADE" |  psql $PSQL_CONNSTRING >/dev/null 2>&1
 	echo "Database has been cleared."
@@ -211,7 +216,8 @@ echo "If the directory doesn't exist, it will be created"
 echo "##### FOR TOMCAT 9, USE SANDBOXED DIR: /var/lib/tomcat9/work #####"
 echo
 
-read -e -p "Headwind MDM storage directory [$DEFAULT_LOCATION]: " -i "$DEFAULT_LOCATION" LOCATION
+# read -e -p "Headwind MDM storage directory [$DEFAULT_LOCATION]: " -i "$DEFAULT_LOCATION" LOCATION
+LOCATION=$DEFAULT_LOCATION
 
 # Create directories
 if [ ! -d $LOCATION ]; then
@@ -240,7 +246,9 @@ chown $TOMCAT_USER:$TOMCAT_USER $LOCATION/log4j-hmdm.xml
 echo
 echo "Please choose the directory where supply scripts will be located."
 echo
-read -e -p "Headwind MDM scripts directory [$DEFAULT_SCRIPT_LOCATION]: " -i "$DEFAULT_SCRIPT_LOCATION" SCRIPT_LOCATION
+# read -e -p "Headwind MDM scripts directory [$DEFAULT_SCRIPT_LOCATION]: " -i "$DEFAULT_SCRIPT_LOCATION" SCRIPT_LOCATION
+SCRIPT_LOCATION=$DEFAULT_SCRIPT_LOCATION
+
 if [ ! -d $SCRIPT_LOCATION ]; then
     mkdir -p $SCRIPT_LOCATION || exit 1
 fi
@@ -252,15 +260,22 @@ echo "Headwind MDM requires access from Internet"
 echo "Please assign a public domain name to this server"
 echo
 
-read -e -p "Protocol (http|https) [$DEFAULT_PROTOCOL]: " -i "$DEFAULT_PROTOCOL" PROTOCOL
-while [ -z $BASE_DOMAIN ]; do
-    read -e -p "Domain name or public IP (e.g. example.com): " -i "$DEFAULT_BASE_DOMAIN" BASE_DOMAIN
-    if [ -z $BASE_DOMAIN ]; then
-        echo "Please enter a non-empty domain name"
-    fi
-done
-read -e -p "Port (e.g. 8080, leave empty for default ports 80 or 443): " -i "$DEFAULT_PORT" PORT
-read -e -p "Project path on server (e.g. /hmdm) or ROOT: " -i "$DEFAULT_BASE_PATH" BASE_PATH
+# read -e -p "Protocol (http|https) [$DEFAULT_PROTOCOL]: " -i "$DEFAULT_PROTOCOL" PROTOCOL
+PROTOCOL=$DEFAULT_PROTOCOL
+
+BASE_DOMAIN=$DEFAULT_BASE_DOMAIN
+#while [ -z $BASE_DOMAIN ]; do
+#    read -e -p "Domain name or public IP (e.g. example.com): " -i "$DEFAULT_BASE_DOMAIN" BASE_DOMAIN
+#
+#    if [ -z $BASE_DOMAIN ]; then
+#        echo "Please enter a non-empty domain name"
+#    fi
+#done
+
+#read -e -p "Port (e.g. 8080, leave empty for default ports 80 or 443): " -i "$DEFAULT_PORT" PORT
+PORT=$DEFAULT_PORT
+#read -e -p "Project path on server (e.g. /hmdm) or ROOT: " -i "$DEFAULT_BASE_PATH" BASE_PATH
+BASE_PATH=$DEFAULT_BASE_PATH
 
 # Nobody changes it!
 # read -e -p "Tomcat virtual host [$TOMCAT_HOST]: " -i "$TOMCAT_HOST" TOMCAT_HOST
@@ -269,7 +284,8 @@ read -e -p "Project path on server (e.g. /hmdm) or ROOT: " -i "$DEFAULT_BASE_PAT
 echo
 echo "To enable password recovery function, Headwind MDM must be connected to SMTP."
 echo "Password recovery is an optional but recommended feature."
-read -e -p "Setup SMTP credentials [Y/n]?: " -i "Y" REPLY
+#read -e -p "Setup SMTP credentials [Y/n]?: " -i "Y" REPLY
+REPLY=n
 
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     read -e -p "E-mail of the admin account: " ADMIN_EMAIL
@@ -285,7 +301,7 @@ fi
 TOMCAT_DEPLOY_PATH=$BASE_PATH
 if [ "$BASE_PATH" == "ROOT" ]; then
     BASE_PATH=""
-fi 
+fi
 
 if [[ ! -z "$PORT" ]]; then
     BASE_HOST="$BASE_DOMAIN:$PORT"
@@ -297,7 +313,9 @@ echo
 echo "Ready to install!"
 echo "Location on server: $LOCATION"
 echo "URL: $PROTOCOL://$BASE_HOST$BASE_PATH"
-read -p "Is this information correct [Y/n]? " -n 1 -r
+# read -p "Is this information correct [Y/n]? " -n 1 -r
+REPLY=Y
+
 echo
 
 if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
@@ -333,7 +351,7 @@ cat ./install/context_template.xml | sed "s|_SQL_HOST_|$SQL_HOST|g; s|_SQL_PORT_
 if [ "$?" -ne 0 ]; then
     echo "Failed to create a Tomcat config file $TOMCAT_CONFIG_PATH/$TOMCAT_DEPLOY_PATH.xml!"
     exit 1
-fi 
+fi
 echo "Tomcat config file created: $TOMCAT_CONFIG_PATH/$TOMCAT_DEPLOY_PATH.xml"
 chmod 644 $TOMCAT_CONFIG_PATH/$TOMCAT_DEPLOY_PATH.xml
 cp $TOMCAT_CONFIG_PATH/$TOMCAT_DEPLOY_PATH.xml $TOMCAT_CONFIG_PATH/$TOMCAT_DEPLOY_PATH.xml~
@@ -367,7 +385,7 @@ fi
 echo "Deployment successful, initializing the database..."
 
 # Initialize database
-cat ./install/sql/hmdm_init.$LANGUAGE.sql | sed "s|_HMDM_BASE_|$LOCATION|g; s|_HMDM_VERSION_|$CLIENT_VERSION|g; s|_HMDM_APK_|$CLIENT_APK|g; s|_ADMIN_EMAIL_|$ADMIN_EMAIL|g;" > $TEMP_SQL_FILE
+cat ./install/sql/hmdm_init.en.sql | sed "s|_HMDM_BASE_|$LOCATION|g; s|_HMDM_VERSION_|$CLIENT_VERSION|g; s|_HMDM_APK_|$CLIENT_APK|g; s|_ADMIN_EMAIL_|$ADMIN_EMAIL|g;" > $TEMP_SQL_FILE
 cat $TEMP_SQL_FILE | psql $PSQL_CONNSTRING > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo "ERROR: failed to execute SQL script!"
@@ -386,7 +404,8 @@ echo "======================================"
 echo
 
 # HTTPS via LetsEncrypt
-read -e -p "Setup HTTPS via LetsEncrypt [Y/n]?: " -i "Y" REPLY
+#read -e -p "Setup HTTPS via LetsEncrypt [Y/n]?: " -i "Y" REPLY
+REPLY=n
 
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     if ! which certbot > /dev/null; then
@@ -435,7 +454,7 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     echo
 
     CERTBOT_RENEWAL=$(crontab -l | grep letsencrypt-ssl.sh)
-    if [ -z "$CERTBOT_RENEWAL" ]; then 
+    if [ -z "$CERTBOT_RENEWAL" ]; then
         read -e -p "Setup regular HTTPS certificate renewal [Y/n]?: " -i "Y" REPLY
         if [[ "$REPLY" =~ ^[Yy]$ ]]; then
             crontab -l > /tmp/current-crontab
@@ -466,7 +485,9 @@ if [ -z "$IPTABLES_HTTPS_SET" ]; then
 fi
 
 # Download required files
-read -e -p "Move required APKs from h-mdm.com to your server [Y/n]?: " -i "Y" REPLY
+#read -e -p "Move required APKs from h-mdm.com to your server [Y/n]?: " -i "Y" REPLY
+REPLY=n
+
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     FILES=$(echo "SELECT url FROM applicationversions WHERE url IS NOT NULL" | psql $PSQL_CONNSTRING 2>/dev/null | tail -n +3 | head -n -2)
     CURRENT_DIR=$(pwd)
