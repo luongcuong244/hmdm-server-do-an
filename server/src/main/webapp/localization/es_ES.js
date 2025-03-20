@@ -909,7 +909,7 @@ document.localization ['es_ES'] = {
     'breadcrumb.config.details': 'Detalles',
     'breadcrumb.application.versions': 'Versiones',
 
-    'app.name': 'Headwind MDM',
+    'app.name': 'KMA MDM',
     'app.vendor.name':"h-mdm.com",
     'app.vendor.link':"https://h-mdm.com",
     'app.description': 'es la solucion MDM open-source',

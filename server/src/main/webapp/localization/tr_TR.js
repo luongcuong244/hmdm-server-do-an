@@ -908,7 +908,7 @@ document.localization ['tr_TR'] = {
 	'breadcrumb.config.details': 'Ayrıntılar',
 	'breadcrumb.application.versions': 'Sürümler',
 
-	'app.name': 'Headwind MDM',
+	'app.name': 'KMA MDM',
 	'app.vendor.name':"h-mdm.com",
 	'app.vendor.link':"https://h-mdm.com",
 	'app.description': 'açık kaynaklı bir mobil cihaz yönetim sistemidir',

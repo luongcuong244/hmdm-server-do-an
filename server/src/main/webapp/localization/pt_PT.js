@@ -908,7 +908,7 @@ document.localization ['pt_PT'] = {
     'breadcrumb.config.details': 'Detalhes',
     'breadcrumb.application.versions': 'Versões',
 
-    'app.name': 'Headwind MDM',
+    'app.name': 'KMA MDM',
     'app.vendor.name':"h-mdm.com",
     'app.vendor.link':"https://h-mdm.com",
     'app.description': 'é o sistema de gerenciamento de dispositivos móveis de código aberto',
