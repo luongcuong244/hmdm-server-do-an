@@ -99,6 +99,8 @@
 }
 
 .login-logo img {
+    width: 100px;
+    height: 100px;
     margin-bottom: 10px;
 }
 
